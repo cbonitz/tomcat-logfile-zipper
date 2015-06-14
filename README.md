@@ -1,8 +1,8 @@
-# Tomcat Logfile Zip Project
-This is a simple war file made to download tomcat logfiles.
+# Tomcat Logfile Zipper
+This is a simple Java Servlet for downloading zipped tomcat logfiles.
 
 ## What
-* It sends a zip containing all files in `${catalina.base}/logs` to any client requesting its context path.
+* It sends a zip containing all files in `${catalina.base}/logs` to any client requesting its context path (`/logs` by default).
 * The zip file is streamed directly to the client. This make this program memory friendly.
 * It is built for trusted environments, i.e. performs no authentication. If you have secrets in your logfiles, *don't use this*
 
