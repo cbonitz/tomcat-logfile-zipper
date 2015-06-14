@@ -1,10 +1,12 @@
 # Tomcat Logfile Zipper
-This is a Java Servlet enabling easy downloading of Apache Tomcat logfiles via http, e.g. from a Tomcat inside a container.
+This is a tiny (~ 4k) Java Servlet enabling easy downloading of Apache Tomcat logfiles via http, e.g. from a Tomcat inside a container.
 
 ## What
 * It sends a zip called file `logs.zip` containing all files in `${catalina.base}/logs` to any client requesting its context path (`/logs` by default).
 * The zip file is streamed directly to the client. This make this program memory friendly.
 * It is built for trusted environments, i.e. performs no authentication. If you have secrets in your logfiles, *don't use this*
+* Zero configuration
+* Zero external dependencies
 
 ## Why?
 It originally was built to easily get logs out of tomcat running in a docker container.
