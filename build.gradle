@@ -48,9 +48,7 @@ cargo {
 	remote {
 		protocol = 'http'
 		hostname = 'localhost'
-		/*
-		 * run: gradle -Pcargo.username=xxx -Pcargo.password=xxx [-Pcargo.port=....] cargoRedeployRemote
-		 */
+		/* see README.md */
 	}
 }
 
