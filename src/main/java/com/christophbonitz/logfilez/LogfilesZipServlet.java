@@ -47,33 +47,54 @@ public class LogfilesZipServlet extends HttpServlet {
 		int count = 0;
 		try {
 			zip = new ZipOutputStream(outputStream);
-			File[] logfiles = basedir.listFiles();
-			count = logfiles.length;
-			for (File logfile : logfiles) {
-				zip.putNextEntry(new ZipEntry(logfile.getName()));
-				LOGGER.info("zipping " + logfile.getName());
-				File tmp = File.createTempFile("templog-", ".txt");
-				LOGGER.log(Level.FINE, "temp file " + tmp.getAbsolutePath());
-				try {
-					// create a temp copy. streaming a file that changes its size 
-					// will fail occasionally
-					Files.copy(logfile.toPath(), tmp.toPath(), StandardCopyOption.REPLACE_EXISTING);
-					FileInputStream fileInputStream = new FileInputStream(tmp);
-					try {
-						copy(zip, fileInputStream);
-					} finally {
-						closeQuietly(fileInputStream);
-					}
-				} finally {
-					deleteIfExistsQuiet(tmp);
-				}
-				zip.closeEntry();
-			}
+			count = zip("", basedir, zip);
 		} finally {
 			closeQuietly(zip);
 			closeQuietly(outputStream);
 		}
 		LOGGER.info("zipped and served " + count + " logfiles");
+	}
+
+	/**
+	 * Recursively zip log directory
+	 * @param prefix prefix, can be empty
+	 * @param directory directory
+	 * @param zip a zip output stream
+	 * @return number of zipped files
+	 * @throws IOException
+	 */
+	private int zip(String prefix, File directory, ZipOutputStream zip) throws IOException {
+		File[] logfiles = directory.listFiles();
+		int count = 0;
+		for (File logfile : logfiles) {
+			if (!logfile.isFile()) {
+				if (logfile.isDirectory()) {
+					// zip recursively, count files
+					count += zip(prefix + logfile.getName() + "/", logfile, zip);
+				}
+				continue;
+			}
+			zip.putNextEntry(new ZipEntry(prefix + logfile.getName()));
+			LOGGER.info("zipping " + logfile.getName());
+			File tmp = File.createTempFile("templog-", ".txt");
+			LOGGER.log(Level.FINE, "temp file " + tmp.getAbsolutePath());
+			try {
+				// create a temp copy. streaming a file that changes its size 
+				// will fail occasionally
+				Files.copy(logfile.toPath(), tmp.toPath(), StandardCopyOption.REPLACE_EXISTING);
+				FileInputStream fileInputStream = new FileInputStream(tmp);
+				try {
+					copy(zip, fileInputStream);
+				} finally {
+					closeQuietly(fileInputStream);
+				}
+			} finally {
+				deleteIfExistsQuiet(tmp);
+			}
+			zip.closeEntry();
+			count++;
+		}
+		return count;
 	}
 
 	/**
