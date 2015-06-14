@@ -23,4 +23,5 @@ eclipse{
 
 dependencies {
 	providedCompile 'javax.servlet:javax.servlet-api:3.0.1'
+	compile 'com.google.guava:guava:18.0'
 }
