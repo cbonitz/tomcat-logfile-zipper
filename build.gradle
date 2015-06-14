@@ -1,5 +1,5 @@
 /*
- * Tomcat Logfiles Zip project: 
+ * Tomcat Logfile Zipper
  * Copyright (C) 2015 Christoph Bonitz - Licensed under Apache License 2.0 
  */
 
@@ -8,16 +8,7 @@ apply plugin: 'java'
 apply plugin: 'eclipse-wtp'
 apply plugin: 'com.bmuschko.cargo'
 
-buildscript {
-    repositories {
-        jcenter()
-    }
-
-    dependencies {
-        classpath 'com.bmuschko:gradle-cargo-plugin:2.1.1'
-    }
-}
-
+/* The actual build */
 repositories {
     mavenCentral()
 }
@@ -26,6 +17,11 @@ war {
 	archiveName 'logs.war'
 }
 
+dependencies {
+	providedCompile 'javax.servlet:javax.servlet-api:3.0.1'
+}
+
+/* Eclipse integration */
 eclipse{
     jdt {
         sourceCompatibility=1.7
@@ -40,18 +36,23 @@ eclipse{
     }
 }
 
+
+/* Deployment */
+buildscript {
+    repositories {
+        jcenter()
+    }
+	
+    dependencies {
+        classpath 'com.bmuschko:gradle-cargo-plugin:2.1.1'
+    }
+}
+
 cargo {
 	containerId = 'tomcat7x'
 	deployable {
 		context = 'logs'
 	}
-	remote {
-		protocol = 'http'
-		hostname = 'localhost'
-		/* see README.md */
-	}
 }
 
-dependencies {
-	providedCompile 'javax.servlet:javax.servlet-api:3.0.1'
-}
+
