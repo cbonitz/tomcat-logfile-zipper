@@ -1,10 +1,29 @@
+/*
+ * Tomcat Logfiles Zip project: 
+ * Copyright (C) 2015 Christoph Bonitz - Licensed under Apache License 2.0 
+ */
+
 apply plugin: 'war'
 apply plugin: 'java'
-apply plugin: 'jetty'
 apply plugin: 'eclipse-wtp'
+apply plugin: 'com.bmuschko.cargo'
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.bmuschko:gradle-cargo-plugin:2.1.1'
+    }
+}
 
 repositories {
     mavenCentral()
+}
+
+war {
+	archiveName 'logs.war'
 }
 
 eclipse{
@@ -19,6 +38,20 @@ eclipse{
             facet name: 'jst.web', version: '3.0'
         }
     }
+}
+
+cargo {
+	containerId = 'tomcat7x'
+	deployable {
+		context = 'logs'
+	}
+	remote {
+		protocol = 'http'
+		hostname = 'localhost'
+		/*
+		 * run: gradle -Pcargo.username=xxx -Pcargo.password=xxx [-Pcargo.port=....] cargoRedeployRemote
+		 */
+	}
 }
 
 dependencies {

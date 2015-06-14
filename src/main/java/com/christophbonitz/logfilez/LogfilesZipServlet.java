@@ -1,3 +1,4 @@
+/* Copyright (C) 2015 Christoph Bonitz - Licensed under Apache License 2.0 */
 package com.christophbonitz.logfilez;
 
 import java.io.Closeable;
@@ -21,7 +22,6 @@ import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
 /**
- * @author Christoph Bonitz
  * Servlet that sends Tomcat log files as a zip.
  * Uses streams to avoid high memory usage.
  * Created temporary files so their size doesn't change during streaming. 
