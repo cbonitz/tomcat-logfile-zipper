@@ -5,6 +5,12 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -15,12 +21,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.io.ByteStreams;
-import com.google.common.io.Files;
-
 /**
  * Servlet that sends Tomcat log files as a zip.
  * Uses streams to avoid high memory usage.
@@ -29,7 +29,7 @@ import com.google.common.io.Files;
 @WebServlet("/")
 public class LogfilesZipServlet extends HttpServlet {
 	private static final long serialVersionUID = -438627221731395807L;
-	private static final Logger LOGGER = LoggerFactory.getLogger(LogfilesZipServlet.class);
+	private static final Logger LOGGER = Logger.getLogger(LogfilesZipServlet.class.getName());
 	
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -51,16 +51,16 @@ public class LogfilesZipServlet extends HttpServlet {
 			count = logfiles.length;
 			for (File logfile : logfiles) {
 				zip.putNextEntry(new ZipEntry(logfile.getName()));
-				LOGGER.debug("zipping {}", logfile.getName());
+				LOGGER.info("zipping " + logfile.getName());
 				File tmp = File.createTempFile("templog-", ".txt");
-				LOGGER.trace("temp file {}", tmp.getAbsolutePath());
+				LOGGER.log(Level.FINE, "temp file " + tmp.getAbsolutePath());
 				try {
 					// create a temp copy. streaming a file that changes its size 
 					// will fail occasionally
-					Files.copy(logfile, tmp);
+					Files.copy(logfile.toPath(), tmp.toPath(), StandardCopyOption.REPLACE_EXISTING);
 					FileInputStream fileInputStream = new FileInputStream(tmp);
 					try {
-						ByteStreams.copy(fileInputStream, zip);
+						copy(zip, fileInputStream);
 					} finally {
 						closeQuietly(fileInputStream);
 					}
@@ -73,27 +73,51 @@ public class LogfilesZipServlet extends HttpServlet {
 			closeQuietly(zip);
 			closeQuietly(outputStream);
 		}
-		LOGGER.info("zipped and served {} logfiles", count);
-}
+		LOGGER.info("zipped and served " + count + " logfiles");
+	}
 
+	/**
+	 * Copy contents of in to out via a buffer. Imitates Guava's Files.copy
+	 * @param out
+	 * @param in
+	 * @throws IOException
+	 */
+	private void copy(OutputStream out, InputStream in)
+			throws IOException {
+		byte[] buffer = new byte[1024];
+		int readBytes = in.read(buffer);
+		while (readBytes != -1) {
+			out.write(buffer, 0, readBytes);
+			readBytes = in.read(buffer);
+		}
+	}
+
+	/**
+	 * Deletes file if it exists, throwing now Exceptions
+	 * @param file
+	 */
 	private void deleteIfExistsQuiet(File file) {
 		if (file != null && file.exists()) {
 			try {
 				file.delete();
-				LOGGER.trace("deleting file {}", file.getAbsolutePath());
+				LOGGER.log(Level.FINE, "deleting file " + file.getAbsolutePath());
 			} catch (Exception e) {
-				LOGGER.error("Error deleting " + file.getAbsolutePath(), e);
+				LOGGER.log(Level.WARNING, "Error deleting " + file.getAbsolutePath(), e);
 			}
 		}
 	}
 
+	/**
+	 * Close a stream, and don't throw on errors. Imitaltes IOUtils' closeQuietly
+	 * @param outputStream
+	 */
 	private void closeQuietly(Closeable outputStream) {
 		try {
 			if (outputStream != null) {
 				outputStream.close();
 			}
 		} catch (Exception e) {
-			LOGGER.error("Error closing stream", e);
+			LOGGER.log(Level.WARNING, "Error closing stream", e);
 		}
 	}
 }
