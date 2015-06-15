@@ -41,7 +41,7 @@ public class LogfilesZipServlet extends HttpServlet {
 			return;
 		}
 		resp.setHeader("Content-Type", "application/octet-stream");
-		resp.setHeader("content-disposition", "attachment; filename='logs.zip'");
+		resp.setHeader("content-disposition", "attachment; filename=logs.zip");
 		ServletOutputStream outputStream = resp.getOutputStream();
 		ZipOutputStream zip = null;
 		int count = 0;
@@ -105,7 +105,7 @@ public class LogfilesZipServlet extends HttpServlet {
 	 */
 	private void copy(OutputStream out, InputStream in)
 			throws IOException {
-		byte[] buffer = new byte[1024];
+		byte[] buffer = new byte[4096];
 		int readBytes = in.read(buffer);
 		while (readBytes != -1) {
 			out.write(buffer, 0, readBytes);
