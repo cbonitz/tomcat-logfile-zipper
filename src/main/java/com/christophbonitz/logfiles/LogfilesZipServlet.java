@@ -1,5 +1,5 @@
 /* Copyright (C) 2015 Christoph Bonitz - Licensed under Apache License 2.0 */
-package com.christophbonitz.logfilez;
+package com.christophbonitz.logfiles;
 
 import java.io.Closeable;
 import java.io.File;

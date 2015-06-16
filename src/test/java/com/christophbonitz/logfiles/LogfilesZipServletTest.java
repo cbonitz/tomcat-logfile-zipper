@@ -1,4 +1,4 @@
-package com.christophbonitz.logfilez;
+package com.christophbonitz.logfiles;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -23,6 +23,8 @@ import org.junit.After;
 import org.junit.Test;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
+
+import com.christophbonitz.logfiles.LogfilesZipServlet;
 
 public class LogfilesZipServletTest {
 	
