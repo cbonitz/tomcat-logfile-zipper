@@ -1,5 +1,5 @@
 /* Copyright (C) 2015 Christoph Bonitz - Licensed under Apache License 2.0 */
-package com.christophbonitz.logfilez;
+package com.christophbonitz.logfiles;
 
 import java.io.Closeable;
 import java.io.File;
@@ -35,9 +35,14 @@ public class LogfilesZipServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
 		LOGGER.info("Logfiles requested");
-		File basedir = new File(System.getProperty("catalina.base"), "logs");
+		String catalinaBase = System.getProperty("catalina.base");
+		if (catalinaBase == null) {
+			resp.sendError(500, "catalina.base not exist");
+			return;
+		}
+		File basedir = new File(catalinaBase, "logs");
 		if (!basedir.exists()) {
-			resp.sendError(500);
+			resp.sendError(500, "logs directory does not exist");
 			return;
 		}
 		resp.setHeader("Content-Type", "application/octet-stream");
