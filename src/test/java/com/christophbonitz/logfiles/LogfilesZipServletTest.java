@@ -30,6 +30,7 @@ public class LogfilesZipServletTest {
 	private static final String CATALINA_BASE = "catalina.base";
 	private static final String PACKAGE_WITH_ONE_FILE = "onefile";
 	private static final String PACKAGE_WITH_TWO_FILES = "twofiles";
+	private static final String PACKAGE_WITH_SUBDIRECTORIES = "directories";
 	private static final String PACKAGE_WITHOUT_LOG_DIR = "nologs";
 	
 	private LogfilesZipServlet servlet;
@@ -52,7 +53,7 @@ public class LogfilesZipServletTest {
 		ZipInputStream zis = new ZipInputStream(bis);
 		try {
 			assertNextEntry(zis, "catalina.out", "catalina content");
-			assertNull("Not just one entry", zis.getNextEntry());
+			assertNull("Not just one entry (catalina.out)", zis.getNextEntry());
 		} finally {
 			IOUtils.closeQuietly(zis);
 		}
@@ -70,7 +71,26 @@ public class LogfilesZipServletTest {
 		try {
 			assertNextEntry(zis, "catalina.err", "catalina error content");
 			assertNextEntry(zis, "catalina.out", "catalina content");
+			assertNull("Not just two entries (catalina.err, catalina.out)", zis.getNextEntry());
+		} finally {
+			IOUtils.closeQuietly(zis);
+		}
+	}
+	
+	@Test
+	public void testFilesInDirectories() throws ServletException, IOException {
+		setCatalinaBase(PACKAGE_WITH_SUBDIRECTORIES);
+		
+		HttpServletResponse resp = doGetMockResponse();
+		
+		Mockito.verify(resp, Mockito.never()).sendError(Mockito.anyInt());
+		ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
+		ZipInputStream zis = new ZipInputStream(bis);
+		try {
+			assertNextEntry(zis, "catalina.out", "catalina content");
+			assertNextEntry(zis, "subdir/custom.log", "customlog content");
 			assertNull("Not just one entry", zis.getNextEntry());
+			
 		} finally {
 			IOUtils.closeQuietly(zis);
 		}
