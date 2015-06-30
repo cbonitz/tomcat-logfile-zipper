@@ -114,14 +114,17 @@ public class LogfilesZipServlet extends HttpServlet {
 		if (tmp.exists()) {
 			tmp.delete();
 		}
+		FileInputStream fis = null;
+		FileOutputStream fos = null;
 		try {
-			FileInputStream fis = new FileInputStream(logfile);
-			FileOutputStream fos = new FileOutputStream(tmp);
+			fis = new FileInputStream(logfile);
+			fos = new FileOutputStream(tmp);
 			copy(fos, fis);
-			fos.close();
-			fis.close();
 		} catch (IOException e) {
 			LOGGER.log(Level.WARNING, "Cannot copy contents of logfile " + logfile + " to temporary file " + tmp, e);
+		} finally {
+			closeQuietly(fos);
+			closeQuietly(fis);
 		}
 	}
 
@@ -157,12 +160,12 @@ public class LogfilesZipServlet extends HttpServlet {
 
 	/**
 	 * Close a stream, and don't throw on errors. Imitaltes IOUtils' closeQuietly
-	 * @param outputStream
+	 * @param closeable - closeable to close without throwing any exception
 	 */
-	private void closeQuietly(Closeable outputStream) {
+	private void closeQuietly(Closeable closeable) {
 		try {
-			if (outputStream != null) {
-				outputStream.close();
+			if (closeable != null) {
+				closeable.close();
 			}
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Error closing stream", e);
