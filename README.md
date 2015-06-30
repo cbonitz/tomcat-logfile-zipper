@@ -21,3 +21,6 @@ It originally was built to easily get logs out of tomcat running in a docker con
 ## Building with Maven
 * Maven: run `mvn package` to build. The resulting file is `target/logs.war` and can be dropped right into your webapps directory.
 * To deploy via tomcat manager, run `mvn tomcat7:redeploy -Dmaven.tomcat.url=http://<host>:<port>/manager/text -Dtomcat.username=<password>-Dtomcat.password=<password>`
+
+## CI
+Build Status: ![Travis CI](https://travis-ci.org/cbonitz/tomcat-logfile-zipper.svg)
