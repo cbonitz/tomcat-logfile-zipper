@@ -23,4 +23,4 @@ It originally was built to easily get logs out of tomcat running in a docker con
 * To deploy via tomcat manager, run `mvn tomcat7:redeploy -Dmaven.tomcat.url=http://<host>:<port>/manager/text -Dtomcat.username=<password>-Dtomcat.password=<password>`
 
 ## CI
-![Travis CI Status](https://travis-ci.org/cbonitz/tomcat-logfile-zipper.svg)
+[![Travis CI Status](https://travis-ci.org/cbonitz/tomcat-logfile-zipper.svg)](https://travis-ci.org/cbonitz/tomcat-logfile-zipper)
