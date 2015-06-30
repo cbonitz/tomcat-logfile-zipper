@@ -4,11 +4,10 @@ package com.christophbonitz.logfiles;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
@@ -30,6 +29,10 @@ import javax.servlet.http.HttpServletResponse;
 public class LogfilesZipServlet extends HttpServlet {
 	private static final long serialVersionUID = -438627221731395807L;
 	private static final Logger LOGGER = Logger.getLogger(LogfilesZipServlet.class.getName());
+	/**
+	 * Size of buffer to use for copying operations.
+	 */
+	private static final int BUFFER_SIZE = 4096;
 	
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -86,7 +89,7 @@ public class LogfilesZipServlet extends HttpServlet {
 			try {
 				// create a temp copy. streaming a file that changes its size 
 				// will fail occasionally
-				Files.copy(logfile.toPath(), tmp.toPath(), StandardCopyOption.REPLACE_EXISTING);
+				copy(logfile, tmp);
 				FileInputStream fileInputStream = new FileInputStream(tmp);
 				try {
 					copy(zip, fileInputStream);
@@ -103,14 +106,36 @@ public class LogfilesZipServlet extends HttpServlet {
 	}
 
 	/**
+	 * Copy logfile to temporary file.
+	 * @param logfile - file to copy
+	 * @param tmp - temporary file to copy contents of logfile to
+	 */
+	private void copy(File logfile, File tmp) {
+		if (tmp.exists()) {
+			tmp.delete();
+		}
+		FileInputStream fis = null;
+		FileOutputStream fos = null;
+		try {
+			fis = new FileInputStream(logfile);
+			fos = new FileOutputStream(tmp);
+			copy(fos, fis);
+		} catch (IOException e) {
+			LOGGER.log(Level.WARNING, "Cannot copy contents of logfile " + logfile + " to temporary file " + tmp, e);
+		} finally {
+			closeQuietly(fos);
+			closeQuietly(fis);
+		}
+	}
+
+	/**
 	 * Copy contents of in to out via a buffer. Imitates Guava's Files.copy
 	 * @param out
 	 * @param in
 	 * @throws IOException
 	 */
-	private void copy(OutputStream out, InputStream in)
-			throws IOException {
-		byte[] buffer = new byte[4096];
+	private void copy(OutputStream out, InputStream in) throws IOException {
+		byte[] buffer = new byte[BUFFER_SIZE];
 		int readBytes = in.read(buffer);
 		while (readBytes != -1) {
 			out.write(buffer, 0, readBytes);
@@ -135,12 +160,12 @@ public class LogfilesZipServlet extends HttpServlet {
 
 	/**
 	 * Close a stream, and don't throw on errors. Imitaltes IOUtils' closeQuietly
-	 * @param outputStream
+	 * @param closeable - closeable to close without throwing any exception
 	 */
-	private void closeQuietly(Closeable outputStream) {
+	private void closeQuietly(Closeable closeable) {
 		try {
-			if (outputStream != null) {
-				outputStream.close();
+			if (closeable != null) {
+				closeable.close();
 			}
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Error closing stream", e);
