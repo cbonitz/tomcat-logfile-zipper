@@ -2,6 +2,13 @@ package com.christophbonitz.logfiles;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -15,14 +22,13 @@ import java.util.zip.ZipInputStream;
 
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Matchers;
-import org.mockito.Mockito;
 
 public class LogfilesZipServletTest {
 	private static final Logger LOGGER = Logger.getLogger(LogfilesZipServlet.class.getName());
@@ -43,12 +49,25 @@ public class LogfilesZipServletTest {
 	}
 	
 	@Test
+	public void testNonRootPath() throws ServletException, IOException {
+		HttpServletResponse resp = getServletResponse();
+		
+		HttpServletRequest req = mock(HttpServletRequest.class);
+		when(req.getRequestURI()).thenReturn("/logs/foo");
+		when(req.getContextPath()).thenReturn("/logs");
+		
+		servlet.doGet(req, resp);
+		
+		verify(resp).sendError(eq(404), anyString());
+	}
+	
+	@Test
 	public void testOneFile() throws ServletException, IOException {
 		setCatalinaBase(PACKAGE_WITH_ONE_FILE);
 		
 		HttpServletResponse resp = doGetMockResponse();
 		
-		Mockito.verify(resp, Mockito.never()).sendError(Mockito.anyInt());
+		verify(resp, never()).sendError(anyInt());
 		ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
 		ZipInputStream zis = new ZipInputStream(bis);
 		try {
@@ -65,7 +84,7 @@ public class LogfilesZipServletTest {
 		
 		HttpServletResponse resp = doGetMockResponse();
 		
-		Mockito.verify(resp, Mockito.never()).sendError(Mockito.anyInt());
+		verify(resp, never()).sendError(anyInt());
 		ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
 		ZipInputStream zis = new ZipInputStream(bis);
 		try {
@@ -83,7 +102,7 @@ public class LogfilesZipServletTest {
 		
 		HttpServletResponse resp = doGetMockResponse();
 		
-		Mockito.verify(resp, Mockito.never()).sendError(Mockito.anyInt());
+		verify(resp, never()).sendError(anyInt());
 		ByteArrayInputStream bis = new ByteArrayInputStream(bos.toByteArray());
 		ZipInputStream zis = new ZipInputStream(bis);
 		try {
@@ -102,7 +121,7 @@ public class LogfilesZipServletTest {
 		
 		HttpServletResponse resp = doGetMockResponse();
 		
-		Mockito.verify(resp).setHeader("Content-Type", "application/octet-stream");
+		verify(resp).setHeader("Content-Type", "application/octet-stream");
 	}
 	
 	@Test
@@ -111,7 +130,7 @@ public class LogfilesZipServletTest {
 		
 		HttpServletResponse resp = doGetMockResponse();
 		
-		Mockito.verify(resp).sendError(Matchers.eq(500), Matchers.anyString());
+		verify(resp).sendError(eq(500), anyString());
 	}
 	
 	@Test
@@ -121,7 +140,7 @@ public class LogfilesZipServletTest {
 		
 		HttpServletResponse resp = doGetMockResponse();
 		
-		Mockito.verify(resp).sendError(Matchers.eq(500), Matchers.anyString());
+		verify(resp).sendError(eq(500), anyString());
 	}
 	
 	@Test
@@ -130,7 +149,7 @@ public class LogfilesZipServletTest {
 		
 		HttpServletResponse resp = doGetMockResponse();
 		
-		Mockito.verify(resp).sendError(Matchers.eq(500), Matchers.anyString());
+		verify(resp).sendError(eq(500), anyString());
 	}
 	
 	@After
@@ -155,20 +174,24 @@ public class LogfilesZipServletTest {
 			ServletException {
 		HttpServletResponse resp = getServletResponse();
 		
-		servlet.doGet(null, resp);
+		HttpServletRequest req = mock(HttpServletRequest.class);
+		when(req.getRequestURI()).thenReturn("/logs/");
+		when(req.getContextPath()).thenReturn("/logs");
+		
+		servlet.doGet(req, resp);
 		
 		return resp;
 	}
 
 	private HttpServletResponse getServletResponse() throws IOException {
-		HttpServletResponse resp = Mockito.mock(HttpServletResponse.class);
+		HttpServletResponse resp = mock(HttpServletResponse.class);
 		ServletOutputStream os = new ServletOutputStream() {
 			@Override
 			public void write(int b) throws IOException {
 				bos.write(b);
 			}
 		};
-		Mockito.when(resp.getOutputStream()).thenReturn(os);
+		when(resp.getOutputStream()).thenReturn(os);
 		return resp;
 	}
 

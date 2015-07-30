@@ -38,16 +38,29 @@ public class LogfilesZipServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
 		LOGGER.info("Logfiles requested");
+		
+		// Only serve the "root" of the servlet's context path.
+		// Example: context path: /logs => request URI must be /logs/ 
+		if (!"/".equals(req.getRequestURI().substring(req.getContextPath().length()))) {
+			resp.sendError(404, "not found");
+			return;
+		}
+		
+		// Require catalina.base to exist
 		String catalinaBase = System.getProperty("catalina.base");
 		if (catalinaBase == null) {
 			resp.sendError(500, "catalina.base not exist");
 			return;
 		}
+		
+		// Require logs directory to exist
 		File basedir = new File(catalinaBase, "logs");
 		if (!basedir.exists()) {
 			resp.sendError(500, "logs directory does not exist");
 			return;
 		}
+		
+		// Request and configuration are as expected - serve content
 		resp.setHeader("Content-Type", "application/octet-stream");
 		resp.setHeader("content-disposition", "attachment; filename=logs.zip");
 		ServletOutputStream outputStream = resp.getOutputStream();
